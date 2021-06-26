@@ -1,0 +1,22 @@
+id: SkipBuildDependencies
+name: SkipBuildDependencies
+
+callbacks:
+  MT::App::CMS::init_app: |
+    sub {
+        require Class::Method::Modifiers;
+        require MT::WeblogPublisher;
+        require MT::ContentPublisher;
+        Class::Method::Modifiers::around('MT::WeblogPublisher::rebuild_entry', 'MT::ContentPublisher::rebuild_content_data' => sub {
+            my $orig  = shift;
+            my $mt    = shift;
+            my %param = @_;
+
+            if ($param{BuildDependencies}) {
+              delete $param{BuildDependencies};
+              $param{BuildIndexes} = 1;
+            }
+
+            return $orig->($mt, %param);
+        });
+    }
